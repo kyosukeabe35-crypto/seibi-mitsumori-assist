@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}整備見積アシスト{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">整備見積アシスト</div>
+  <nav>
+    <a href="{{ url_for('estimates_new') }}">見積もり作成</a>
+    <a href="{{ url_for('cases_list') }}">過去案件</a>
+    <a href="{{ url_for('consultations_list') }}">相談メモ</a>
+    <a href="{{ url_for('import_home') }}">Excel取り込み</a>
+    <a href="{{ url_for('settings_page') }}">設定</a>
+  </nav>
+</header>
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-list">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

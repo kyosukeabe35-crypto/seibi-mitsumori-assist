@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}設定{% endblock %}
+{% block content %}
+<h1>設定</h1>
+<form method="post" class="panel">
+  <h2>会社情報(見積書に印字されます)</h2>
+  <div class="field"><label>会社名</label><input type="text" name="company_name" value="{{ settings.company_name }}"></div>
+  <div class="field"><label>住所</label><input type="text" name="company_address" value="{{ settings.company_address }}"></div>
+  <div class="grid-2">
+    <div class="field"><label>電話番号</label><input type="text" name="company_tel" value="{{ settings.company_tel }}"></div>
+    <div class="field"><label>メールアドレス</label><input type="email" name="company_email" value="{{ settings.company_email }}"></div>
+  </div>
+
+  <h2>見積の既定値</h2>
+  <div class="grid-2">
+    <div class="field"><label>消費税率(例: 0.10 = 10%)</label><input type="number" step="0.01" name="tax_rate" value="{{ settings.tax_rate }}"></div>
+    <div class="field"><label>見積有効期限(日数)</label><input type="number" name="default_validity_days" value="{{ settings.default_validity_days }}"></div>
+  </div>
+  <button type="submit">保存</button>
+</form>
+
+<div class="panel">
+  <h2>データの保存場所</h2>
+  <p class="muted">すべてのデータはこのPC内の <code>data/app.db</code>(SQLite)に保存されます。外部サーバーへは送信されません。詳細はREADMEをご覧ください。</p>
+</div>
+{% endblock %}

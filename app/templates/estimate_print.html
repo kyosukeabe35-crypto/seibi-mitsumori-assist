@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>御見積書 #{{ est.id }}</title>
+<style>
+  body { font-family: "Hiragino Sans", "Yu Gothic", sans-serif; color: #222; padding: 24px; max-width: 760px; margin: 0 auto; }
+  h1 { text-align: center; letter-spacing: 0.2em; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  th, td { border: 1px solid #999; padding: 6px 8px; font-size: 0.9rem; }
+  th { background: #f0f0f0; }
+  .num { text-align: right; }
+  .totals { width: 300px; margin-left: auto; margin-top: 10px; }
+  .totals td { border: none; padding: 3px 6px; }
+  .grand td { font-weight: bold; border-top: 2px solid #222; font-size: 1.1rem; }
+  .sample-banner { background: #fff3cd; color: #7a5b12; padding: 8px; text-align: center; margin-bottom: 12px; font-weight: bold; }
+  .foot-note { margin-top: 20px; font-size: 0.8rem; color: #666; }
+  @media print { .no-print { display: none; } }
+</style>
+</head>
+<body>
+  <div class="no-print" style="text-align:right; margin-bottom: 10px;">
+    <button onclick="window.print()">印刷 / PDF保存</button>
+  </div>
+  {% if est.is_sample %}<div class="sample-banner">【サンプルデータ】実在の取引ではありません</div>{% endif %}
+  <h1>御 見 積 書</h1>
+  <p>見積日: {{ est.estimate_date or '' }} ／ 有効期限: {{ est.valid_until or '' }}</p>
+  <p>お客様名: {{ est.customer_name or '' }} 様</p>
+
+  <p>
+    {{ settings.company_name or '(会社名未設定)' }}<br>
+    {{ settings.company_address or '' }}<br>
+    {{ settings.company_tel or '' }} {{ settings.company_email or '' }}
+  </p>
+
+  <p>
+    車両: {{ est.maker or '' }} {{ est.model or '' }} {{ est.year_or_type or '' }} ／ 走行距離: {{ est.mileage or '' }}<br>
+    作業内容: {{ est.work_description or '' }}<br>
+    {% if est.symptom_note %}症状・補足: {{ est.symptom_note }}{% endif %}
+  </p>
+
+  <table>
+    <thead><tr><th>区分</th><th>項目</th><th>数量</th><th>単価</th><th>金額</th></tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr>
+        <td>{{ it.category }}</td>
+        <td>{{ it.name }}</td>
+        <td class="num">{{ it.qty }}</td>
+        <td class="num">¥{{ '{:,}'.format(it.unit_price) }}</td>
+        <td class="num">¥{{ '{:,}'.format(it.amount) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td>小計</td><td class="num">¥{{ '{:,}'.format(est.subtotal) }}</td></tr>
+    <tr><td>消費税({{ (est.tax_rate * 100) | round(0,'floor') | int }}%)</td><td class="num">¥{{ '{:,}'.format(est.tax) }}</td></tr>
+    <tr class="grand"><td>合計</td><td class="num">¥{{ '{:,}'.format(est.total) }}</td></tr>
+  </table>
+
+  {% if est.notes %}<p>備考: {{ est.notes }}</p>{% endif %}
+
+  <p class="foot-note">※本見積は参考事例・入力内容をもとに作成した見積です。最終的な金額は現車確認の上で確定します。</p>
+</body>
+</html>

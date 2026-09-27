@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}過去案件{% endblock %}
+{% block content %}
+<h1>過去案件</h1>
+<form method="get" class="panel">
+  <div class="grid-2">
+    <div class="field"><label>メーカー</label><input type="text" name="maker" value="{{ q.maker }}"></div>
+    <div class="field"><label>車種</label><input type="text" name="model" value="{{ q.model }}"></div>
+  </div>
+  <div class="grid-2">
+    <div class="field"><label>整備士</label><input type="text" name="mechanic" value="{{ q.mechanic }}"></div>
+    <div class="field"><label>作業内容キーワード</label><input type="text" name="work" value="{{ q.work }}"></div>
+  </div>
+  <div class="actions-row">
+    <button type="submit">検索</button>
+    <a class="btn secondary" href="{{ url_for('cases_new') }}">案件を手入力で登録</a>
+  </div>
+</form>
+
+<div class="panel">
+  <table>
+    <thead><tr><th>日付</th><th>メーカー/車種</th><th>整備士</th><th>作業内容</th><th class="num">合計</th><th>種別</th><th></th></tr></thead>
+    <tbody>
+    {% for c in rows %}
+      <tr>
+        <td>{{ c.case_date or '-' }}</td>
+        <td>{{ c.maker }} {{ c.model }}{% if c.is_sample %} <span class="tag sample">サンプル</span>{% endif %}</td>
+        <td>{{ c.mechanic or '-' }}</td>
+        <td>{{ c.work_description }}</td>
+        <td class="num">¥{{ '{:,}'.format(c.total) }}</td>
+        <td><span class="tag">{{ {'manual':'手入力','imported':'取込','mechanic_confirmed':'整備士確認済み'}.get(c.source_type, c.source_type) }}</span></td>
+        <td><a class="btn secondary small" href="{{ url_for('case_detail', case_id=c.id) }}">詳細</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="muted">該当する案件がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

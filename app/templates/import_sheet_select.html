@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}シート選択{% endblock %}
+{% block content %}
+<h1>シートを選択</h1>
+<p class="muted">ファイル: {{ original_name }}</p>
+{% if dup_warning %}<div class="notice-warn">{{ dup_warning }}</div>{% endif %}
+
+<form method="post" action="{{ url_for('import_preview') }}" class="panel">
+  <input type="hidden" name="original_name" value="{{ original_name }}">
+  <input type="hidden" name="stored_name" value="{{ stored_name }}">
+  <input type="hidden" name="checksum" value="{{ checksum }}">
+  <div class="field">
+    <label>シート</label>
+    <select name="sheet_name">
+      {% for s in sheets %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit">内容をプレビュー</button>
+</form>
+{% endblock %}

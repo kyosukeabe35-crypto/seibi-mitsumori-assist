@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}相談メモ{% endblock %}
+{% block content %}
+<h1>整備士への相談メモ</h1>
+<div class="actions-row" style="margin-bottom:12px;">
+  <a class="btn" href="{{ url_for('consultations_new') }}">新規相談メモを作成</a>
+</div>
+<div class="panel">
+  <table>
+    <thead><tr><th>ID</th><th>車両</th><th>作業内容</th><th>概算</th><th>状態</th><th></th></tr></thead>
+    <tbody>
+    {% for c in rows %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.maker }} {{ c.model }}{% if c.is_sample %} <span class="tag sample">サンプル</span>{% endif %}</td>
+        <td>{{ c.work_description }}</td>
+        <td class="num">{% if c.answer_amount %}¥{{ '{:,}'.format(c.answer_amount) }}{% elif c.rough_estimate %}(概算)¥{{ '{:,}'.format(c.rough_estimate) }}{% else %}-{% endif %}</td>
+        <td><span class="tag status-{{ c.status }}">{{ {'consulting':'相談中','answered':'回答あり','estimated':'見積作成済み'}.get(c.status, c.status) }}</span></td>
+        <td><a class="btn secondary small" href="{{ url_for('consultation_detail', consultation_id=c.id) }}">詳細</a></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">相談メモはまだありません。</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Excel取り込み{% endblock %}
+{% block content %}
+<h1>Excel/CSV取り込み</h1>
+<div class="notice-warn">{{ unsupported_note }}</div>
+
+<div class="panel">
+  <h2>ファイルを選択</h2>
+  <form method="post" action="{{ url_for('import_upload') }}" enctype="multipart/form-data">
+    <div class="field">
+      <input type="file" name="file" accept=".xlsx,.xls,.csv" required>
+    </div>
+    <button type="submit">読み込む(シート選択へ)</button>
+  </form>
+  <p class="muted">元のファイルは変更・削除されません。ここではアップロードされたコピーだけを扱います。</p>
+</div>
+
+<div class="panel">
+  <h2>取込履歴</h2>
+  <table>
+    <thead><tr><th>ID</th><th>ファイル名</th><th>シート</th><th>件数</th><th>取込日時</th></tr></thead>
+    <tbody>
+    {% for f in files %}
+      <tr><td>{{ f.id }}</td><td>{{ f.filename }}</td><td>{{ f.sheet_name }}</td><td>{{ f.row_count }}</td><td>{{ f.imported_at }}</td></tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">まだ取込履歴がありません。</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

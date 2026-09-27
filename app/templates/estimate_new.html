@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}見積もり作成 - 案件入力{% endblock %}
+{% block content %}
+<h1>見積もり作成 — 案件を入力</h1>
+<p class="muted">分かる範囲で入力してください。あとから編集できます。</p>
+
+<form method="post" class="panel">
+  <div class="grid-2">
+    <div class="field">
+      <label>顧客名(任意)</label>
+      <input type="text" name="customer_name">
+    </div>
+    <div class="field">
+      <label>整備士</label>
+      <input type="text" name="mechanic" list="mechanic-list" placeholder="未定の場合は空欄のまま">
+      <datalist id="mechanic-list">
+        {% for m in mechanics %}<option value="{{ m }}">{% endfor %}
+      </datalist>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="field">
+      <label>メーカー</label>
+      <input type="text" name="maker" placeholder="例: BMW MINI">
+    </div>
+    <div class="field">
+      <label>車種・年式または型式</label>
+      <input type="text" name="model" placeholder="例: クーパーS">
+    </div>
+  </div>
+  <div class="field">
+    <label>年式・型式(補足)</label>
+    <input type="text" name="year_or_type" placeholder="例: 2015年式 / R56">
+  </div>
+  <div class="field">
+    <label>作業内容</label>
+    <textarea name="work_description" rows="2" placeholder="例: タイミングチェーン交換"></textarea>
+  </div>
+  <div class="field">
+    <label>症状・補足</label>
+    <textarea name="symptom_note" rows="2"></textarea>
+  </div>
+  <div class="field">
+    <label>走行距離(任意)</label>
+    <input type="text" name="mileage" placeholder="例: 82,000km">
+  </div>
+  <button type="submit">参考事例を検索して見積もりを作る</button>
+</form>
+{% endblock %}

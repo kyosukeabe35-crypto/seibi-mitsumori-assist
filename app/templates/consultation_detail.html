@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}相談メモ #{{ c.id }}{% endblock %}
+{% block content %}
+<h1>相談メモ #{{ c.id }} <span class="tag status-{{ c.status }}">{{ {'consulting':'相談中','answered':'回答あり','estimated':'見積作成済み'}.get(c.status, c.status) }}</span></h1>
+
+<div class="panel">
+  <p><strong>{{ c.maker }} {{ c.model }} {{ c.year_or_type }}</strong> ／ 整備士: {{ c.mechanic or '-' }}</p>
+  <p>作業内容: {{ c.work_description }}</p>
+  {% if c.symptom_note %}<p>症状・補足: {{ c.symptom_note }}</p>{% endif %}
+  {% if c.rough_estimate %}<p>仮の概算金額: ¥{{ '{:,}'.format(c.rough_estimate) }}</p>{% endif %}
+</div>
+
+<div class="panel">
+  <h2>相談メモ本文(コピーして送付してください)</h2>
+  <textarea id="memo-text" rows="8" readonly>{{ c.memo_text }}</textarea>
+  <div class="actions-row">
+    <button type="button" onclick="copyMemo()">本文をコピー</button>
+  </div>
+</div>
+
+{% if c.status == 'consulting' %}
+<div class="panel">
+  <h2>回答を記録する</h2>
+  <form method="post" action="{{ url_for('consultation_answer', consultation_id=c.id) }}">
+    <div class="field"><label>回答金額</label><input type="number" name="answer_amount" required></div>
+    <div class="field"><label>回答内容メモ</label><textarea name="answer_text" rows="3"></textarea></div>
+    <button type="submit">回答を記録</button>
+  </form>
+</div>
+{% endif %}
+
+{% if c.status in ('answered', 'estimated') %}
+<div class="panel">
+  <h2>回答内容</h2>
+  <p>回答金額: ¥{{ '{:,}'.format(c.answer_amount or 0) }} ／ 回答日: {{ c.answered_at or '-' }}</p>
+  {% if c.answer_text %}<p>{{ c.answer_text }}</p>{% endif %}
+  <div class="actions-row">
+    {% if c.status == 'answered' %}
+    <form method="post" action="{{ url_for('consultation_apply_to_estimate', consultation_id=c.id) }}">
+      <button type="submit">見積に反映する</button>
+    </form>
+    {% endif %}
+    {% if not c.linked_case_id %}
+    <form method="post" action="{{ url_for('consultation_save_as_case', consultation_id=c.id) }}">
+      <button type="submit" class="secondary">整備士確認済みの参考事例として保存</button>
+    </form>
+    {% else %}
+    <a class="btn secondary" href="{{ url_for('case_detail', case_id=c.linked_case_id) }}">参考事例 #{{ c.linked_case_id }} を見る</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{% if c.linked_estimate_id %}
+<p><a href="{{ url_for('estimate_detail', estimate_id=c.linked_estimate_id) }}">紐づく見積 #{{ c.linked_estimate_id }} を開く</a></p>
+{% endif %}
+
+<script>
+function copyMemo() {
+  const t = document.getElementById('memo-text');
+  t.removeAttribute('readonly');
+  t.select();
+  document.execCommand('copy');
+  t.setAttribute('readonly', 'readonly');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}相談メモ作成{% endblock %}
+{% block content %}
+<h1>整備士への相談メモを作成</h1>
+<p class="muted">整備士へのメール・メッセージ送信は自動化しません。内容を確認のうえ、ご自身で送付してください。</p>
+<form method="post" class="panel" action="{{ url_for('consultations_new', estimate_id=prefill.id if prefill else none) }}">
+  {% if prefill %}<p class="muted">見積 #{{ prefill.id }} と紐づけて作成します。</p>{% endif %}
+  <div class="grid-2">
+    <div class="field"><label>メーカー</label><input type="text" name="maker" value="{{ prefill.maker if prefill else '' }}"></div>
+    <div class="field"><label>車種</label><input type="text" name="model" value="{{ prefill.model if prefill else '' }}"></div>
+  </div>
+  <div class="grid-2">
+    <div class="field"><label>年式・型式</label><input type="text" name="year_or_type" value="{{ prefill.year_or_type if prefill else '' }}"></div>
+    <div class="field"><label>整備士</label><input type="text" name="mechanic" value="{{ prefill.mechanic if prefill else '' }}"></div>
+  </div>
+  <div class="field"><label>作業内容</label><textarea name="work_description" rows="2">{{ prefill.work_description if prefill else '' }}</textarea></div>
+  <div class="field"><label>症状・補足</label><textarea name="symptom_note" rows="2">{{ prefill.symptom_note if prefill else '' }}</textarea></div>
+  <div class="field"><label>走行距離</label><input type="text" name="mileage" value="{{ prefill.mileage if prefill else '' }}"></div>
+  <div class="field"><label>仮の概算金額(任意)</label><input type="number" name="rough_estimate"></div>
+  <div class="field">
+    <label>相談メモ本文(コピーして送付できます)</label>
+    <textarea name="memo_text" rows="7">{{ memo_text }}</textarea>
+  </div>
+  <button type="submit">相談メモを保存</button>
+</form>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}見積もり #{{ est.id }}{% endblock %}
+{% block content %}
+<h1>
+  見積もり #{{ est.id }}
+  {% if est.is_sample %}<span class="tag sample">サンプル</span>{% endif %}
+  <span class="tag">{{ '作成済み' if est.status == 'created' else '下書き' }}</span>
+</h1>
+
+<div class="panel">
+  <h2>案件情報</h2>
+  <form method="post" action="{{ url_for('estimate_update_case', estimate_id=est.id) }}">
+    <div class="grid-2">
+      <div class="field"><label>顧客名(任意)</label>
+        <input type="text" name="customer_name" value="{{ est.customer_name or '' }}"></div>
+      <div class="field"><label>整備士</label>
+        <input type="text" name="mechanic" value="{{ est.mechanic or '' }}"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label>メーカー</label>
+        <input type="text" name="maker" value="{{ est.maker or '' }}"></div>
+      <div class="field"><label>車種</label>
+        <input type="text" name="model" value="{{ est.model or '' }}"></div>
+    </div>
+    <div class="field"><label>年式・型式</label>
+      <input type="text" name="year_or_type" value="{{ est.year_or_type or '' }}"></div>
+    <div class="field"><label>作業内容</label>
+      <textarea name="work_description" rows="2">{{ est.work_description or '' }}</textarea></div>
+    <div class="field"><label>症状・補足</label>
+      <textarea name="symptom_note" rows="2">{{ est.symptom_note or '' }}</textarea></div>
+    <div class="field"><label>走行距離</label>
+      <input type="text" name="mileage" value="{{ est.mileage or '' }}"></div>
+    <button type="submit">更新して参考事例を再検索</button>
+  </form>
+</div>
+
+<div class="panel">
+  <h2>参考事例 {% if candidates|length == 0 %}<span class="tag">参考事例なし</span>{% endif %}</h2>
+  {% if candidates|length == 0 %}
+    <p class="muted">条件に合う過去事例が見つかりませんでした。整備士への相談メモを作成できます。</p>
+    <a class="btn" href="{{ url_for('consultations_new', estimate_id=est.id) }}">相談メモを作成する</a>
+  {% else %}
+    <p class="muted">車種・作業内容・整備士が近い順に表示しています。金額をそのまま採用するかどうかは判断してください。</p>
+    {% for score, reasons, case in candidates %}
+    <div class="candidate-card">
+      <div class="head">
+        <div>
+          <strong>{{ case.maker }} {{ case.model }} {{ case.year_or_type }}</strong>
+          <span class="muted">/ {{ case.mechanic or '整備士未記録' }} / {{ case.case_date or '日付不明' }}</span>
+          {% if case.is_sample %}<span class="tag sample">サンプル</span>{% endif %}
+        </div>
+        <div class="num" style="font-size:1.05rem; font-weight:bold;">¥{{ '{:,}'.format(case.total) }}</div>
+      </div>
+      <div style="margin:6px 0;">
+        {% for r in reasons %}<span class="tag match">{{ r }}</span>{% endfor %}
+      </div>
+      <div class="muted">{{ case.work_description }}{% if case.symptom_note %} ／ {{ case.symptom_note }}{% endif %}</div>
+      <div class="muted">元資料: {{ case.source_type }}{% if case.source_sheet_row %} ({{ case.source_sheet_row }}){% endif %}</div>
+      <div class="actions-row">
+        <a class="btn secondary small" href="{{ url_for('case_detail', case_id=case.id) }}">内訳を見る</a>
+        <form method="post" action="{{ url_for('estimate_adopt_case', estimate_id=est.id, case_id=case.id) }}" style="display:inline;">
+          <input type="hidden" name="reasons" value="{{ reasons|join('・') }}">
+          <input type="hidden" name="mode" value="append">
+          <button type="submit" class="small">明細を追加で反映</button>
+        </form>
+        <form method="post" action="{{ url_for('estimate_adopt_case', estimate_id=est.id, case_id=case.id) }}" style="display:inline;"
+              onsubmit="return confirm('現在の明細を置き換えてこの事例の内訳を反映します。よろしいですか?');">
+          <input type="hidden" name="reasons" value="{{ reasons|join('・') }}">
+          <input type="hidden" name="mode" value="replace">
+          <button type="submit" class="small secondary">明細を置き換えて反映</button>
+        </form>
+        {% if case.id in adopted_case_ids %}<span class="tag match">採用済み</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>見積明細</h2>
+  <form method="post" action="{{ url_for('estimate_update_items', estimate_id=est.id) }}" id="items-form">
+    <table class="item-table" id="items-table">
+      <thead><tr><th>区分</th><th>項目</th><th style="width:70px;">数量</th><th style="width:110px;">単価</th><th style="width:110px;">金額</th><th></th></tr></thead>
+      <tbody id="items-body">
+        {% for it in items %}
+        <tr>
+          <td>
+            <select name="item_category">
+              {% for c in ['部品','工賃','その他'] %}
+              <option value="{{ c }}" {{ 'selected' if it.category == c else '' }}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input type="text" name="item_name" value="{{ it.name }}"></td>
+          <td><input type="number" step="0.01" name="item_qty" value="{{ it.qty }}" oninput="recalcRow(this)"></td>
+          <td><input type="number" name="item_unit_price" value="{{ it.unit_price }}" oninput="recalcRow(this)"></td>
+          <td class="num row-amount">¥{{ '{:,}'.format(it.amount) }}</td>
+          <td><button type="button" class="small secondary" onclick="this.closest('tr').remove()">削除</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="actions-row">
+      <button type="button" class="secondary" onclick="addRow()">行を追加</button>
+      <button type="submit">明細を保存して再計算</button>
+    </div>
+  </form>
+
+  <div class="totals-box">
+    <table>
+      <tr><td>小計</td><td class="num">¥{{ '{:,}'.format(est.subtotal) }}</td></tr>
+      <tr><td>消費税({{ (est.tax_rate * 100) | round(0, 'floor') | int }}%)</td><td class="num">¥{{ '{:,}'.format(est.tax) }}</td></tr>
+      <tr class="grand"><td>合計</td><td class="num">¥{{ '{:,}'.format(est.total) }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>見積条件</h2>
+  <form method="post" action="{{ url_for('estimate_update_meta', estimate_id=est.id) }}">
+    <div class="grid-2">
+      <div class="field"><label>見積日</label>
+        <input type="date" name="estimate_date" value="{{ est.estimate_date or '' }}"></div>
+      <div class="field"><label>有効期限</label>
+        <input type="date" name="valid_until" value="{{ est.valid_until or '' }}"></div>
+    </div>
+    <div class="field"><label>消費税率(例: 0.10 = 10%)</label>
+      <input type="number" step="0.01" name="tax_rate" value="{{ est.tax_rate }}"></div>
+    <div class="field"><label>備考</label>
+      <textarea name="notes" rows="2">{{ est.notes or '' }}</textarea></div>
+    <button type="submit">条件を保存</button>
+  </form>
+</div>
+
+<div class="panel">
+  <h2>金額の根拠(内部記録)</h2>
+  <pre style="white-space:pre-wrap; font-size:0.85rem; color:var(--muted);">{{ est.basis_note or '(記録なし)' }}</pre>
+</div>
+
+<div class="panel">
+  <h2>出力・確定</h2>
+  <div class="actions-row">
+    <a class="btn secondary" href="{{ url_for('estimate_print', estimate_id=est.id) }}" target="_blank">印刷プレビュー</a>
+    <a class="btn secondary" href="{{ url_for('estimate_pdf', estimate_id=est.id) }}">PDFを保存</a>
+    <a class="btn secondary" href="{{ url_for('estimate_xlsx', estimate_id=est.id) }}">編集用Excelを出力</a>
+    <a class="btn secondary" href="{{ url_for('consultations_new', estimate_id=est.id) }}">整備士へ相談メモを作る</a>
+    {% if est.status != 'created' %}
+    <form method="post" action="{{ url_for('estimate_finalize', estimate_id=est.id) }}">
+      <button type="submit">見積書を作成済みにする</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function recalcRow(input) {
+  const row = input.closest('tr');
+  const qty = parseFloat(row.querySelector('[name=item_qty]').value) || 0;
+  const price = parseFloat(row.querySelector('[name=item_unit_price]').value) || 0;
+  row.querySelector('.row-amount').textContent = '¥' + Math.round(qty * price).toLocaleString();
+}
+function addRow() {
+  const tbody = document.getElementById('items-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select name="item_category"><option value="部品">部品</option><option value="工賃" selected>工賃</option><option value="その他">その他</option></select></td>
+    <td><input type="text" name="item_name" placeholder="項目名"></td>
+    <td><input type="number" step="0.01" name="item_qty" value="1" oninput="recalcRow(this)"></td>
+    <td><input type="number" name="item_unit_price" value="0" oninput="recalcRow(this)"></td>
+    <td class="num row-amount">¥0</td>
+    <td><button type="button" class="small secondary" onclick="this.closest('tr').remove()">削除</button></td>`;
+  tbody.appendChild(tr);
+}
+</script>
+{% endblock %}

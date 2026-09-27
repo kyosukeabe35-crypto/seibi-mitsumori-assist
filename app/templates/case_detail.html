@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}案件 #{{ case.id }}{% endblock %}
+{% block content %}
+<h1>過去案件 #{{ case.id }} {% if case.is_sample %}<span class="tag sample">サンプル</span>{% endif %}</h1>
+<div class="panel">
+  <p>
+    <strong>{{ case.maker }} {{ case.model }} {{ case.year_or_type }}</strong><br>
+    整備士: {{ case.mechanic or '-' }} ／ 日付: {{ case.case_date or '-' }} ／ 走行距離: {{ case.mileage or '-' }}
+  </p>
+  <p>作業内容: {{ case.work_description }}</p>
+  {% if case.symptom_note %}<p>症状・補足: {{ case.symptom_note }}</p>{% endif %}
+  <p class="muted">
+    種別: {{ {'manual':'手入力','imported':'Excel/CSV取込','mechanic_confirmed':'整備士確認済み'}.get(case.source_type, case.source_type) }}
+    {% if source_file %} ／ 元ファイル: {{ source_file.filename }}（シート: {{ source_file.sheet_name }}, 取込日: {{ source_file.imported_at }}）{% endif %}
+    {% if case.source_sheet_row %} ／ 位置: {{ case.source_sheet_row }}{% endif %}
+  </p>
+</div>
+
+<div class="panel">
+  <h2>内訳</h2>
+  <table>
+    <thead><tr><th>区分</th><th>項目</th><th class="num">数量</th><th class="num">単価</th><th class="num">金額</th></tr></thead>
+    <tbody>
+    {% for it in items %}
+      <tr><td>{{ it.category }}</td><td>{{ it.name }}</td><td class="num">{{ it.qty }}</td>
+          <td class="num">¥{{ '{:,}'.format(it.unit_price) }}</td><td class="num">¥{{ '{:,}'.format(it.amount) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="totals-box">
+    <table>
+      <tr><td>小計</td><td class="num">¥{{ '{:,}'.format(case.subtotal) }}</td></tr>
+      <tr><td>消費税</td><td class="num">¥{{ '{:,}'.format(case.tax) }}</td></tr>
+      <tr class="grand"><td>合計</td><td class="num">¥{{ '{:,}'.format(case.total) }}</td></tr>
+    </table>
+  </div>
+</div>
+{% endblock %}

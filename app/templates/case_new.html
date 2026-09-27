@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}案件を手入力で登録{% endblock %}
+{% block content %}
+<h1>案件を手入力で登録</h1>
+<p class="muted">明細が読み取れない帳票向けに、基本情報と合計金額のみで登録できます。</p>
+<form method="post" class="panel">
+  <div class="grid-2">
+    <div class="field"><label>顧客名(任意)</label><input type="text" name="customer_name"></div>
+    <div class="field"><label>整備士</label><input type="text" name="mechanic"></div>
+  </div>
+  <div class="grid-2">
+    <div class="field"><label>メーカー</label><input type="text" name="maker"></div>
+    <div class="field"><label>車種</label><input type="text" name="model"></div>
+  </div>
+  <div class="field"><label>年式・型式</label><input type="text" name="year_or_type"></div>
+  <div class="field"><label>作業内容</label><textarea name="work_description" rows="2"></textarea></div>
+  <div class="field"><label>症状・補足</label><textarea name="symptom_note" rows="2"></textarea></div>
+  <div class="grid-2">
+    <div class="field"><label>走行距離</label><input type="text" name="mileage"></div>
+    <div class="field"><label>日付</label><input type="date" name="case_date"></div>
+  </div>
+  <div class="field"><label>合計金額(税込)</label><input type="number" name="total" required></div>
+  <button type="submit">登録する</button>
+</form>
+{% endblock %}

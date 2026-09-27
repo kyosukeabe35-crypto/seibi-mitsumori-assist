@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}項目の割り当て{% endblock %}
+{% block content %}
+<h1>内容を確認して項目を割り当てる</h1>
+<p class="muted">ファイル: {{ original_name }} ／ シート: {{ sheet_name }} ／ 全{{ total_rows }}行(先頭30行を表示)</p>
+
+<div class="panel">
+  <h2>プレビュー</h2>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr><th></th>{% for c in range(ncols) %}<th>列{{ c }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr><td class="muted">行{{ loop.index0 }}</td>
+        {% for c in range(ncols) %}<td>{{ row[c] if c < row|length else '' }}</td>{% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('import_register') }}" class="panel">
+  <input type="hidden" name="original_name" value="{{ original_name }}">
+  <input type="hidden" name="stored_name" value="{{ stored_name }}">
+  <input type="hidden" name="checksum" value="{{ checksum }}">
+  <input type="hidden" name="sheet_name" value="{{ sheet_name }}">
+
+  <div class="field">
+    <label>見出し(項目名)が入っている行番号 — 上のプレビューの「行」列を参照</label>
+    <input type="number" name="header_row_index" value="{{ header_row_index }}" min="0">
+  </div>
+
+  <h2>列の割り当て</h2>
+  <p class="muted">各項目がプレビューのどの「列」に対応するか選んでください。使わない項目は「(使用しない)」のままで構いません。</p>
+  <div class="grid-2">
+  {% for key, label in fields %}
+    {% if key != 'skip' %}
+    <div class="field">
+      <label>{{ label }}</label>
+      <select name="col_{{ key }}">
+        <option value="none">(使用しない)</option>
+        {% for c in range(ncols) %}<option value="{{ c }}">列{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+  {% endfor %}
+  </div>
+
+  <div class="notice-warn">
+    明細(部品/工賃)の列が分からない・存在しない場合は「合計金額」だけを割り当てれば、
+    1行=1案件として「取込明細」という1件の明細で登録されます。
+  </div>
+
+  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; margin-top:8px;">
+    <input type="checkbox" name="force" value="1" style="width:auto;"> 重複ファイルでも登録する
+  </label>
+
+  <button type="submit">この内容で登録する</button>
+</form>
+{% endblock %}
